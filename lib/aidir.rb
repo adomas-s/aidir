@@ -29,8 +29,7 @@ class Aidir
     git.clear_cached_files
 
     scoreboard = Scoreboard.new(@results)
-    output = scoreboard.results
-    print output
+    print scoreboard.results
   end
 
 end

@@ -22,35 +22,17 @@ class Scoreboard
 
   private
 
+  def file_keys
+    @file_keys ||= [
+      'flog total',
+      'flog/method average'
+    ]
+  end
+
   def get_relevant_scores
     get_diffs
     split_scores_by_type
     sort_scores
-  end
-
-  def print_method_board
-    @output << @formatter.caption('METHOD SCORES')
-    @output << @formatter.table_header('Diff from master', 'Current', 'Method')
-
-    @method_data.each do |method, info|
-      @output << @formatter.method_row(method, info)
-    end
-  end
-
-  def print_file_board
-    @output << @formatter.caption('FILE SCORES')
-    @output << @formatter.table_header('Diff from master', 'Current', 'Method')
-
-    @file_data.each do |metric, files|
-      @output << @formatter.metric_header(metric)
-      files.each do |file_info|
-        @output << @formatter.file_metric_row(metric, file_info)
-      end
-    end
-  end
-
-  def print_no_diffs
-    @output << "#{cyan_start}No changes detected#{color_end}\n"
   end
 
   def split_scores_by_type
@@ -63,7 +45,7 @@ class Scoreboard
   def get_diffs
     @raw_data.each do |file, lines|
       lines.each do |metric, scores|
-        score = diff(scores[:branch], scores[:master])
+        score = calc_diff(scores[:branch], scores[:master])
         next if score == 0.0
         @diff_data[metric] ||= []
         flag = nil
@@ -90,7 +72,7 @@ class Scoreboard
     @method_data = Hash[*sorted_methods]
   end
 
-  def diff(branch, master)
+  def calc_diff(branch, master)
     if master and branch
       (branch - master).round(2)
     elsif branch
@@ -100,11 +82,28 @@ class Scoreboard
     end
   end
 
-  def file_keys
-    [
-      'flog total',
-      'flog/method average'
-    ]
+  def print_method_board
+    @output << @formatter.caption('METHOD SCORES')
+    @output << @formatter.table_header('Diff from master', 'Current', 'Method')
+
+    @method_data.each do |method, info|
+      @output << @formatter.method_row(method, info)
+    end
   end
+
+  def print_file_board
+    @file_data.each do |metric, files|
+      @output << @formatter.caption("FILE #{metric} SCORES")
+      @output << @formatter.table_header('Diff from master', 'Current', 'File')
+      files.each do |file_info|
+        @output << @formatter.file_metric_row(metric, file_info)
+      end
+    end
+  end
+
+  def print_no_diffs
+    @output << "#{colors[:cyan]}No changes detected#{color_end}\n"
+  end
+
 
 end

@@ -2,7 +2,7 @@ class Scoreboard
 
   def initialize(raw_data)
     @raw_data = raw_data
-    @diff_data = {}
+    @delta_data = {}
     @file_data = {}
     @method_data = {}
     @output = ''
@@ -12,7 +12,7 @@ class Scoreboard
   def results
     get_relevant_scores
     if @method_data.empty?
-      print_no_diffs
+      print_no_deltas_found
       return
     end
     print_method_board
@@ -30,32 +30,32 @@ class Scoreboard
   end
 
   def get_relevant_scores
-    get_diffs
+    get_deltas
     split_scores_by_type
     sort_scores
   end
 
   def split_scores_by_type
-    @method_data = @diff_data
+    @method_data = @delta_data
     file_keys.each do |key|
       @file_data[key] = @method_data.delete(key)
     end
   end
 
-  def get_diffs
+  def get_deltas
     @raw_data.each do |file, lines|
       lines.each do |metric, scores|
         score = calc_diff(scores[:branch], scores[:master])
         next if score == 0.0
-        @diff_data[metric] ||= []
+        @delta_data[metric] ||= []
         flag = nil
         if [:new, :deleted].include?(score)
           flag = score
           score = 0.0
         end
-        @diff_data[metric] << {
+        @delta_data[metric] << {
           file: file,
-          diff: score,
+          delta: score,
           current: scores[:branch],
           flag: flag
         }
@@ -66,9 +66,9 @@ class Scoreboard
   def sort_scores
     return if @method_data.empty?
     file_keys.each do |key|
-      @file_data[key].sort_by! { |f| -f[:diff] }
+      @file_data[key].sort_by! { |f| -f[:delta] }
     end
-    sorted_methods = @method_data.sort_by { |_, data| -data[0][:diff] }.flatten
+    sorted_methods = @method_data.sort_by { |_, data| -data[0][:delta] }.flatten
     @method_data = Hash[*sorted_methods]
   end
 
@@ -96,14 +96,13 @@ class Scoreboard
       @output << @formatter.caption("FILE #{metric} SCORES")
       @output << @formatter.table_header('Diff from master', 'Current', 'File')
       files.each do |file_info|
-        @output << @formatter.file_metric_row(metric, file_info)
+        @output << @formatter.file_row(metric, file_info)
       end
     end
   end
 
-  def print_no_diffs
-    @output << "#{colors[:cyan]}No changes detected#{color_end}\n"
+  def print_no_deltas_found
+    print @formatter.caption('No changes detected')
   end
-
 
 end

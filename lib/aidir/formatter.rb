@@ -1,8 +1,5 @@
 class Formatter
 
-  def initialize
-  end
-
   def caption(title)
     "\n--- #{colors[:cyan]}#{title}#{color_end} ---\n"
   end
@@ -14,77 +11,76 @@ class Formatter
   def method_row(method, info)
     current = info[:current]
     if info[:flag]
-      contents = flag_output(info[:flag])
+      contents = preformat_flag(info[:flag])
     else
-      contents = diff_output(info[:diff])
+      contents = preformat_delta(info[:delta])
     end
-    sprintf(format[:method_row], contents, current_output(current), method)
+    sprintf(format[:method_row], contents, preformat_current(current), method)
   end
 
-  def current_output(score)
-    sprintf(format[:current], current_prefix(score), score, color_end)
-  end
-
-  def metric_header(metric)
-    sprintf(format[:metric], "#{colors[:cyan]}#{metric}#{color_end}")
-  end
-
-  def file_metric_row(metric, info)
+  def file_row(metric, info)
     filename = info[:file]
-    diff = info[:diff]
+    delta = info[:delta]
     if metric == 'flog total'
-      current = total_current_output(info[:current])
+      current = preformat_file_total(info[:current])
     elsif metric == 'flog/method average'
-      current = avg_current_output(info[:current])
+      current = preformat_file_avg(info[:current])
     end
-    sprintf(format[:method_row], diff_output(diff), current, filename)
-  end
-
-  def total_current_output(score)
-    sprintf(format[:current], '', score, '')
-  end
-
-  def avg_current_output(score)
-    sprintf(format[:current], current_prefix(score), score, color_end)
+    sprintf(format[:method_row], preformat_delta(delta), current, filename)
   end
 
   private
 
-  def diff_output(score)
-    sprintf(format[:diff], diff_prefix(score), score, color_end)
+  # Preformatters
+
+  def preformat_current(score)
+    sprintf(format[:current], method_color(score), score, color_end)
   end
 
-  def flag_output(flag)
+  def preformat_delta(score)
+    sprintf(format[:delta], delta_color(score), score, color_end)
+  end
+
+  def preformat_flag(flag)
     sprintf(format[:flag], flag)
   end
+
+  def preformat_file_total(score)
+    sprintf(format[:current], '', score, '')
+  end
+
+  def preformat_file_avg(score)
+    sprintf(format[:current], method_color(score), score, color_end)
+  end
+
+  # Format strings
 
   def format
     @format ||= {
       header:     "%18s%10s   %-90s\n",
-      diff:       "%s%18.1f%s",
+      delta:      "%s%18.1f%s",
       current:    "%s%10.1f%s",
       method_row: "%s%s   %-90s\n",
       flag:       "%18s",
-      metric:     "%-18s\n"
     }
   end
 
   # Score coloring logic
 
-  def diff_prefix(score)
-    if score < 0
-      colors[:green]
-    elsif score < 5
-      colors[:yellow]
-    else
-      colors[:red]
-    end
+  def delta_color(score)
+    delta_score_thresholds = [0, 5]
+    score_color(score, delta_score_thresholds)
   end
 
-  def current_prefix(score)
-    if score < 20
+  def method_color(score)
+    method_score_thresholds = [20, 40]
+    score_color(score, method_score_thresholds)
+  end
+
+  def score_color(score, thresholds)
+    if score < thresholds[0]
       colors[:green]
-    elsif score < 40
+    elsif score < thresholds[1]
       colors[:yellow]
     else
       colors[:red]

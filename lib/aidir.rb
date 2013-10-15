@@ -1,5 +1,6 @@
 require_relative 'aidir/git'
 require_relative 'aidir/flog'
+require_relative 'aidir/formatter'
 require_relative 'aidir/scoreboard'
 require 'open3'
 

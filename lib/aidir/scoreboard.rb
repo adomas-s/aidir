@@ -6,6 +6,7 @@ class Scoreboard
     @file_data = {}
     @method_data = {}
     @output = ''
+    @formatter = Formatter.new
   end
 
   def results
@@ -27,115 +28,29 @@ class Scoreboard
     sort_scores
   end
 
-  def diff_format
-    @diff_format ||= "%s%18.1f%s"
-  end
-
-  def current_format
-    @current_format ||= "%s%10.1f%s"
-  end
-
-  def diff_output(score)
-    sprintf(diff_format, diff_prefix(score), score, color_end)
-  end
-
-  def current_output(score)
-    sprintf(current_format, current_prefix(score), score, color_end)
-  end
-
-  def total_current_output(score)
-    sprintf(current_format, "", score, "")
-  end
-
-  def avg_current_output(score)
-    sprintf(current_format, current_prefix(score), score, color_end)
-  end
-
-  def head_format
-    @head_format ||= "%18s%10s   %-90s\n"
-  end
-
   def print_method_board
-    @output << "--- #{cyan_start}METHOD SCORES#{color_end} ---\n"
-
-    @output << sprintf(head_format, "Diff from master", "Current", "Method")
-    format = "%s%s   %-90s\n"
+    @output << @formatter.caption('METHOD SCORES')
+    @output << @formatter.table_header('Diff from master', 'Current', 'Method')
 
     @method_data.each do |method, info|
-      current = info[:current]
-      unless info[:flag]
-        diff = info[:diff]
-        @output << sprintf(format, diff_output(diff), current_output(current), method)
-      else
-        flag_output = sprintf("%18s", info[:flag].to_s)
-        @output << sprintf(format, flag_output, current_output(current), method)
-      end
+      @output << @formatter.method_row(method, info)
     end
   end
 
   def print_file_board
-    @output << "--- #{cyan_start}FILE SCORES#{color_end} ---\n"
-
-    @output << sprintf(head_format, "Diff from master", "Current", "Method")
-    format = "%s%s   %-90s\n"
+    @output << @formatter.caption('FILE SCORES')
+    @output << @formatter.table_header('Diff from master', 'Current', 'Method')
 
     @file_data.each do |metric, files|
-      @output << sprintf("%-18s\n", "#{cyan_start}#{metric}#{color_end}")
-      files.each do |file|
-        filename = file[:file]
-        diff = file[:diff]
-        current = file[:current]
-        if metric == "flog total"
-          @output << sprintf(format, diff_output(diff), total_current_output(current), filename)
-        else
-          @output << sprintf(format, diff_output(diff), avg_current_output(current), filename)
-        end
+      @output << @formatter.metric_header(metric)
+      files.each do |file_info|
+        @output << @formatter.file_metric_row(metric, file_info)
       end
     end
   end
 
   def print_no_diffs
     @output << "#{cyan_start}No changes detected#{color_end}\n"
-  end
-
-  def diff_prefix(score)
-    if score < 0
-      green_start
-    elsif score < 5
-      yellow_start
-    else
-      red_start
-    end
-  end
-
-  def current_prefix(score)
-    if score < 20
-      green_start
-    elsif score < 40
-      yellow_start
-    else
-      red_start
-    end
-  end
-
-  def cyan_start
-    "\033[36m"
-  end
-
-  def red_start
-    "\033[31m"
-  end
-
-  def yellow_start
-    "\033[33m"
-  end
-
-  def green_start
-    "\033[32m"
-  end
-
-  def color_end
-    "\033[0m"
   end
 
   def split_scores_by_type

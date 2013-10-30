@@ -9,13 +9,18 @@ class Formatter
   end
 
   def method_row(method, info)
+    return deleted_method_row(method) if info[:flag] == :deleted
     current = info[:current]
-    if info[:flag]
+    if info[:flag] == :new
       contents = preformat_flag(info[:flag])
     else
       contents = preformat_delta(info[:delta])
     end
     sprintf(format[:method_row], contents, preformat_current(current), method)
+  end
+
+  def deleted_method_row(method)
+    sprintf(format[:header], 'deleted', '-', method)
   end
 
   def file_row(metric, info)

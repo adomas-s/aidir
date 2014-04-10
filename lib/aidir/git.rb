@@ -1,7 +1,9 @@
 class Git
 
-  def initialize(errors)
-    @errors = errors
+  attr_reader :errors, :changed_files
+
+  def initialize
+    @errors = []
     @changed_files = []
   end
 
@@ -30,6 +32,8 @@ class Git
 
   def all_changed_files
     Open3.popen3("git diff --name-only origin/master...") do |_, stdout, stderr|
+      error = stderr.read
+      @errors << error and return unless error.empty?
       out = stdout.read
       @changed_files = out.split("\n") unless out.empty?
     end
@@ -57,6 +61,5 @@ class Git
     safe_filename = file.gsub('/', '_')
     "#{Dir.pwd}/tmp/aidir_#{safe_filename}"
   end
-
 
 end

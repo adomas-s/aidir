@@ -7,15 +7,13 @@ require 'open3'
 class Aidir
 
   def self.start
-    @errors = []
     @results = {}
-    git = nil
     files = nil
 
-    git = Git.new(@errors)
+    git = Git.new
     git.is_repository?
-    if @errors.any?
-      puts @errors
+    if git.errors.any?
+      puts git.errors
       return
     end
 

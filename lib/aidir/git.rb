@@ -1,6 +1,6 @@
 class Git
 
-  attr_reader :errors, :changed_files
+  attr_accessor :errors, :changed_files
 
   def initialize
     @errors = []

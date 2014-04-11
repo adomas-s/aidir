@@ -154,14 +154,45 @@ describe Git do
   end
 
   describe 'filter_ruby_files' do
-  end
-
-  describe 'cache_files' do
+    it 'should leave only .rb files' do
+      @git.send(:changed_files=, %w(Gemfile file1.rb app/file2.rb foo.ruby rb.))
+      @git.send(:filter_ruby_files)
+      @git.send(:changed_files).should eql %w(file1.rb app/file2.rb)
+    end
+    it 'should return empty array when no ruby files were changed' do
+      @git.send(:changed_files=, %w(Gemfile))
+      @git.send(:filter_ruby_files)
+      @git.send(:changed_files).should eql []
+    end
   end
 
   describe 'remote_file_contents' do
+    before(:each) do
+      # Add one file, make initial commit on master
+      Dir.chdir @repository do
+        File.open 'file1.rb', 'w+' do |f|
+          f.write "def foo\nputs 'bar'\nend\n"
+        end
+        `git add -A`
+        `git commit -m "First file"`
+        `git remote add origin #{@repository_clone}`
+        `git push -q origin master`
+      end
+    end
+
+    it 'returns contents of remotely existing file' do
+      Dir.chdir @repository do
+        remote = @git.send(:remote_file_contents, 'file1.rb')
+        remote.should eql "def foo\nputs 'bar'\nend\n"
+      end
+    end
+
+    it 'returns empty string for files not in remote' do
+      Dir.chdir @repository do
+        remote = @git.send(:remote_file_contents, 'file2.rb')
+        remote.should eql ""
+      end
+    end
   end
 
-  describe 'temp' do
-  end
 end

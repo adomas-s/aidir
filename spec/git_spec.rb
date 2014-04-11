@@ -1,6 +1,15 @@
 require 'spec_helper'
 
 describe Git do
+  before(:all) do
+    if `git config --get user.name`.empty?
+      `git config --global user.name "Aidir Rspec"`
+    end
+    if `git config --get user.email`.empty?
+      `git config --global user.email aidir@rspec.com`
+    end
+  end
+
   before(:each) do
     @repository = File.realdirpath('../aidir-git-repository')
     @not_repository = File.realdirpath('../aidir-not-a-git-repository')

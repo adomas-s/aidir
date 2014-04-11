@@ -19,7 +19,6 @@ Gem::Specification.new do |s|
     lib/aidir/scoreboard.rb
   ]
 
-  s.add_runtime_dependency("flog", "~> 4.1.2")
-  s.add_development_dependency("flog", "~> 4.2.0")
-  s.add_development_dependency("rspec")
+  s.add_runtime_dependency("flog", "~> 4.2.0")
+  s.add_development_dependency("rspec", "~> 2.14.1")
 end

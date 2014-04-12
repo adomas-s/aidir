@@ -45,7 +45,8 @@ class Git
 
   def cache_files
     @changed_files.each do |file|
-      File.open(temp(file), 'w') do |f|
+      Dir.mkdir 'tmp' unless File.directory? 'tmp'
+      File.open(temp(file), 'w+') do |f|
         f.write(remote_file_contents(file))
       end
     end

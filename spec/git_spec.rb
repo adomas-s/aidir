@@ -38,6 +38,52 @@ describe Git do
     FileUtils.rm_rf(@repository_clone)
   end
 
+  def create_and_push_first_file
+    Dir.chdir @repository do
+      File.open 'file1.rb', 'w+' do |f|
+        f.write "def foo\nputs 'bar'\nend\n"
+      end
+      `git add -A`
+      `git commit -m "First file"`
+      `git remote add origin #{@repository_clone}`
+      `git push -q origin master`
+    end
+  end
+
+  def create_and_push_second_file_in_new_branch
+    Dir.chdir @repository do
+      `git checkout -q -b new_file`
+
+      # Create first new file
+      File.open 'file2.rb', 'w+' do |f|
+        f.write "def zoo\nputs 'bar'\nend\n"
+      end
+      `git add -A && git commit -m "Second file"`
+    end
+  end
+
+  def create_and_push_third_file_in_current_branch
+    Dir.chdir @repository do
+      # Create second new file
+      File.open 'file3.rb', 'w+' do |f|
+        f.write "def moo\nputs 'darth'\nend\n"
+      end
+      `git add -A && git commit -m "Third file"`
+    end
+  end
+
+  def in_repository
+    Dir.chdir @repository do
+      yield
+    end
+  end
+
+  def not_in_repository
+    Dir.chdir @not_repository do
+      yield
+    end
+  end
+
   it 'returns errors' do
     @git.errors.should eql []
   end
@@ -48,24 +94,25 @@ describe Git do
 
   describe 'is_repository?' do
     it 'recognizes repository' do
-      Dir.chdir @repository do
-        @git.is_repository?
-      end
+      in_repository { @git.is_repository? }
       @git.errors.should eql []
     end
 
     it 'recognizes non-repository' do
-      Dir.chdir @not_repository do
-        @git.is_repository?
-      end
-
+      not_in_repository { @git.is_repository? }
       @git.errors.size.should eql 1
       @git.errors.first.should include "fatal: Not a git repository"
     end
   end
 
   describe 'ruby_files' do
-
+    it 'returns ruby files' do
+      create_and_push_first_file
+      create_and_push_second_file_in_new_branch
+      in_repository do
+        # puts @git.ruby_files
+      end
+    end
   end
 
   describe 'clear_cached_files' do
@@ -77,38 +124,21 @@ describe Git do
 
     context 'with expected workflow' do
       before(:each) do
-        # Add one file, make initial commit on master
-        Dir.chdir @repository do
-          File.open 'file1.rb', 'w+' do |f|
-            f.write "def foo\nputs 'bar'\nend\n"
-          end
-          `git add -A`
-          `git commit -m "First file"`
-          `git remote add origin #{@repository_clone}`
-          `git push -q origin master`
-        end
+        create_and_push_first_file
       end
 
       it 'should find new files' do
-        Dir.chdir @repository do
-          `git checkout -q -b new_file`
+        create_and_push_second_file_in_new_branch
 
-          # Create first new file
-          File.open 'file2.rb', 'w+' do |f|
-            f.write "def zoo\nputs 'bar'\nend\n"
-          end
-          `git add -A && git commit -m "Second file"`
-
+        in_repository do
           @git.send(:all_changed_files)
           @git.errors.should eql []
           @git.changed_files.should eql %w(file2.rb)
+        end
 
+        create_and_push_third_file_in_current_branch
 
-          # Create second new file
-          File.open 'file3.rb', 'w+' do |f|
-            f.write "def moo\nputs 'darth'\nend\n"
-          end
-          `git add -A && git commit -m "Third file"`
+        in_repository do
           @git.send(:all_changed_files)
           @git.errors.should eql []
           @git.changed_files.should eql %w(file2.rb file3.rb)
@@ -116,7 +146,7 @@ describe Git do
       end
 
       it 'should find modified files' do
-        Dir.chdir @repository do
+        in_repository do
           `git checkout -q -b modified_file`
 
           File.open 'file1.rb', 'w+' do |f|
@@ -131,7 +161,7 @@ describe Git do
       end
 
       it 'should find removed files' do
-         Dir.chdir @repository do
+         in_repository do
           `git checkout -q -b removed_file`
 
           File.delete 'file1.rb'
@@ -146,13 +176,14 @@ describe Git do
 
     context 'with errors' do
       it 'should catch errors' do
-        Dir.chdir @repository do
+        in_repository do
           File.open 'file1.rb', 'w+' do |f|
             f.write "def foo\nputs 'bar'\nend\n"
           end
           `git add -A`
           `git commit -m "First file"`
           # Don't add origin, so origin/master gets lost
+
           @git.send(:all_changed_files)
           @git.errors.size.should eql 1
           @git.changed_files.should eql []
@@ -167,6 +198,7 @@ describe Git do
       @git.send(:filter_ruby_files)
       @git.send(:changed_files).should eql %w(file1.rb app/file2.rb)
     end
+
     it 'should return empty array when no ruby files were changed' do
       @git.send(:changed_files=, %w(Gemfile))
       @git.send(:filter_ruby_files)
@@ -174,31 +206,49 @@ describe Git do
     end
   end
 
+  describe 'cache_files' do
+    it 'should cache master file contents' do
+      create_and_push_first_file
+      in_repository do
+        @git.changed_files = %w(file1.rb)
+        @git.send(:cache_files)
+        puts File.exists?('tmp/aidir_file1.rb').should eql true
+      end
+    end
+  end
+
   describe 'remote_file_contents' do
     before(:each) do
-      # Add one file, make initial commit on master
-      Dir.chdir @repository do
-        File.open 'file1.rb', 'w+' do |f|
-          f.write "def foo\nputs 'bar'\nend\n"
-        end
-        `git add -A`
-        `git commit -m "First file"`
-        `git remote add origin #{@repository_clone}`
-        `git push -q origin master`
-      end
+      create_and_push_first_file
     end
 
     it 'returns contents of remotely existing file' do
-      Dir.chdir @repository do
+      in_repository do
         remote = @git.send(:remote_file_contents, 'file1.rb')
         remote.should eql "def foo\nputs 'bar'\nend\n"
       end
     end
 
     it 'returns empty string for files not in remote' do
-      Dir.chdir @repository do
+      in_repository do
         remote = @git.send(:remote_file_contents, 'file2.rb')
         remote.should eql ""
+      end
+    end
+  end
+
+  describe 'temp' do
+    it 'returns full path to cached file in repository root' do
+      in_repository do
+        filename = @git.send(:temp, 'fubar.rb')
+        filename.should eql @repository + '/tmp/aidir_fubar.rb'
+      end
+    end
+
+    it 'returns full path to cached file deep in repository' do
+      in_repository do
+        filename = @git.send(:temp, 'foo/bar/fubar.rb')
+        filename.should eql @repository + '/tmp/aidir_foo_bar_fubar.rb'
       end
     end
   end

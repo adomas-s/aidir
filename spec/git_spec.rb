@@ -19,7 +19,6 @@ describe Git do
     FileUtils.rm_rf(@repository)
     FileUtils.rm_rf(@not_repository)
 
-
     Dir.mkdir(@repository)
     Dir.mkdir(@repository_clone)
     Dir.chdir(@repository_clone) do

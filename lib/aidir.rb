@@ -7,27 +7,24 @@ require 'open3'
 class Aidir
 
   def self.start
-    @results = {}
-    files = nil
+    @git = Git.new
+    @git.is_repository?
+    puts @git.errors and return if @git.errors.any?
 
-    git = Git.new
-    git.is_repository?
-    if git.errors.any?
-      puts git.errors
-      return
-    end
-
-    files = git.ruby_files
-
-    files.each do |file|
-      flog = Flog.new(file)
-      @results[file] = flog.analyze
-    end
-
-    git.clear_cached_files
-
-    scoreboard = Scoreboard.new(@results)
+    scoreboard = Scoreboard.new(get_flog_results)
     print scoreboard.results
+  end
+
+  def get_flog_results
+    results = {}
+
+    @git.ruby_files.each do |file|
+      flog = Flog.new(file)
+      results[file] = flog.analyze
+    end
+    @git.clear_cached_files
+
+    results
   end
 
 end

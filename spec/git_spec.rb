@@ -71,6 +71,19 @@ describe Git do
   end
 
   describe 'clear_cached_files' do
+    it 'deletes cached files' do
+      create_and_push_first_file
+      create_and_push_second_file_in_new_branch
+      create_and_push_third_file_in_current_branch
+      in_repository do
+        @git.ruby_files
+        File.exists?('tmp/aidir_file2.rb').should eql true
+        File.exists?('tmp/aidir_file3.rb').should eql true
+        @git.clear_cached_files
+        File.exists?('tmp/aidir_file2.rb').should eql false
+        File.exists?('tmp/aidir_file3.rb').should eql false
+      end
+    end
   end
 
   # private

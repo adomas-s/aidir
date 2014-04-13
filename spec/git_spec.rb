@@ -2,40 +2,16 @@ require 'spec_helper'
 
 describe Git do
   before(:all) do
-    if `git config --get user.name`.empty?
-      `git config --global user.name "Aidir Rspec"`
-    end
-    if `git config --get user.email`.empty?
-      `git config --global user.email aidir@rspec.com`
-    end
+    ensure_git_credentials
   end
 
   before(:each) do
-    @repository = File.realdirpath('../aidir-git-repository')
-    @not_repository = File.realdirpath('../aidir-not-a-git-repository')
-    @repository_clone = File.realdirpath('../aidir-clone-repository')
-
-    # Delete possible trash
-    FileUtils.rm_rf(@repository)
-    FileUtils.rm_rf(@not_repository)
-
-    Dir.mkdir(@repository)
-    Dir.mkdir(@repository_clone)
-    Dir.chdir(@repository_clone) do
-      `git init --bare`
-    end
-    Dir.chdir(@repository) do
-      `git init`
-    end
-    Dir.mkdir @not_repository
-
-    @git = Git.new
+    @repository, @not_repository, @repository_clone = prepare_directories
+    in_repository { @git = Git.new }
   end
 
   after(:each) do
-    FileUtils.rm_rf(@repository)
-    FileUtils.rm_rf(@not_repository)
-    FileUtils.rm_rf(@repository_clone)
+    delete_directories_and_contents
   end
 
   it 'returns errors' do

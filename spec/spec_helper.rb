@@ -25,8 +25,45 @@ end
 
 # Helper methods
 
+def ensure_git_credentials
+  if `git config --get user.name`.empty?
+    `git config --global user.name "Aidir Rspec"`
+  end
+  if `git config --get user.email`.empty?
+    `git config --global user.email aidir@rspec.com`
+  end
+end
+
+def prepare_directories
+  repository = File.realdirpath('../aidir-git-repository')
+  not_repository = File.realdirpath('../aidir-not-a-git-repository')
+  repository_clone = File.realdirpath('../aidir-clone-repository')
+
+  # Delete possible trash
+  FileUtils.rm_rf(repository)
+  FileUtils.rm_rf(not_repository)
+
+  Dir.mkdir(repository)
+  Dir.mkdir(repository_clone)
+  Dir.chdir(repository_clone) do
+    `git init --bare`
+  end
+  Dir.chdir(repository) do
+    `git init`
+  end
+  Dir.mkdir not_repository
+
+  return repository, not_repository, repository_clone
+end
+
+def delete_directories_and_contents
+  FileUtils.rm_rf(@repository)
+  FileUtils.rm_rf(@not_repository)
+  FileUtils.rm_rf(@repository_clone)
+end
+
 def create_and_push_first_file
-  Dir.chdir @repository do
+  in_repository do
     File.open 'file1.rb', 'w+' do |f|
       f.write "def foo\n'bar'\nend\n"
     end
@@ -38,7 +75,7 @@ def create_and_push_first_file
 end
 
 def create_and_push_second_file_in_new_branch
-  Dir.chdir @repository do
+  in_repository do
     `git checkout -q -b new_file`
 
     # Create first new file
@@ -50,7 +87,7 @@ def create_and_push_second_file_in_new_branch
 end
 
 def create_and_push_third_file_in_current_branch
-  Dir.chdir @repository do
+  in_repository do
     # Create second new file
     File.open 'file3.rb', 'w+' do |f|
       f.write "def moo\n'darth'\nend\n"

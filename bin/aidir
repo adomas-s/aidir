@@ -2,4 +2,5 @@
 
 require 'aidir'
 
-aidir = Aidir::start
+aidir = Aidir.new
+aidir.start

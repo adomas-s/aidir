@@ -6,14 +6,20 @@ require 'open3'
 
 class Aidir
 
-  def self.start
-    @git = Git.new
-    if @git.is_repository? and @git.errors.any?
-      puts @git.errors and return
+  def initialize
+    start
+  end
+
+  def start
+    git_errors = prepare_git
+    if git_errors
+      puts git_errors
+      return git_errors
     end
 
     scoreboard = Scoreboard.new(get_flog_results)
     print scoreboard.results
+    return scoreboard.results
   end
 
   def get_flog_results
@@ -26,6 +32,11 @@ class Aidir
     @git.clear_cached_files
 
     results
+  end
+
+  def prepare_git
+    @git = Git.new
+    return @git.errors unless @git.is_repository?
   end
 
 end

@@ -38,52 +38,6 @@ describe Git do
     FileUtils.rm_rf(@repository_clone)
   end
 
-  def create_and_push_first_file
-    Dir.chdir @repository do
-      File.open 'file1.rb', 'w+' do |f|
-        f.write "def foo\nputs 'bar'\nend\n"
-      end
-      `git add -A`
-      `git commit -m "First file"`
-      `git remote add origin #{@repository_clone}`
-      `git push -q origin master`
-    end
-  end
-
-  def create_and_push_second_file_in_new_branch
-    Dir.chdir @repository do
-      `git checkout -q -b new_file`
-
-      # Create first new file
-      File.open 'file2.rb', 'w+' do |f|
-        f.write "def zoo\nputs 'bar'\nend\n"
-      end
-      `git add -A && git commit -m "Second file"`
-    end
-  end
-
-  def create_and_push_third_file_in_current_branch
-    Dir.chdir @repository do
-      # Create second new file
-      File.open 'file3.rb', 'w+' do |f|
-        f.write "def moo\nputs 'darth'\nend\n"
-      end
-      `git add -A && git commit -m "Third file"`
-    end
-  end
-
-  def in_repository
-    Dir.chdir @repository do
-      yield
-    end
-  end
-
-  def not_in_repository
-    Dir.chdir @not_repository do
-      yield
-    end
-  end
-
   it 'returns errors' do
     @git.errors.should eql []
   end
@@ -106,11 +60,12 @@ describe Git do
   end
 
   describe 'ruby_files' do
-    it 'returns ruby files' do
+    it 'returns ruby files, skips other files' do
       create_and_push_first_file
       create_and_push_second_file_in_new_branch
       in_repository do
-        # puts @git.ruby_files
+        File.open 'not-ruby.txt', 'w+'
+        @git.ruby_files.should eql %w(file2.rb)
       end
     end
   end
@@ -150,7 +105,7 @@ describe Git do
           `git checkout -q -b modified_file`
 
           File.open 'file1.rb', 'w+' do |f|
-            f.write "def loo\nputs 'bar'\nend\n"
+            f.write "def loo\n'bar'\nend\n"
           end
           `git add -A && git commit -m "Modified first file"`
 
@@ -178,7 +133,7 @@ describe Git do
       it 'should catch errors' do
         in_repository do
           File.open 'file1.rb', 'w+' do |f|
-            f.write "def foo\nputs 'bar'\nend\n"
+            f.write "def foo\n'bar'\nend\n"
           end
           `git add -A`
           `git commit -m "First file"`
@@ -212,7 +167,7 @@ describe Git do
       in_repository do
         @git.changed_files = %w(file1.rb)
         @git.send(:cache_files)
-        puts File.exists?('tmp/aidir_file1.rb').should eql true
+        File.exists?('tmp/aidir_file1.rb').should eql true
       end
     end
   end
@@ -225,7 +180,7 @@ describe Git do
     it 'returns contents of remotely existing file' do
       in_repository do
         remote = @git.send(:remote_file_contents, 'file1.rb')
-        remote.should eql "def foo\nputs 'bar'\nend\n"
+        remote.should eql "def foo\n'bar'\nend\n"
       end
     end
 

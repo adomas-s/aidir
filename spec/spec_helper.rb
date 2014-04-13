@@ -21,3 +21,52 @@ RSpec.configure do |config|
   #     --seed 1234
   config.order = 'random'
 end
+
+
+# Helper methods
+
+def create_and_push_first_file
+  Dir.chdir @repository do
+    File.open 'file1.rb', 'w+' do |f|
+      f.write "def foo\nputs 'bar'\nend\n"
+    end
+    `git add -A`
+    `git commit -m "First file"`
+    `git remote add origin #{@repository_clone}`
+    `git push -q origin master`
+  end
+end
+
+def create_and_push_second_file_in_new_branch
+  Dir.chdir @repository do
+    `git checkout -q -b new_file`
+
+    # Create first new file
+    File.open 'file2.rb', 'w+' do |f|
+      f.write "def zoo\nputs 'bar'\nend\n"
+    end
+    `git add -A && git commit -m "Second file"`
+  end
+end
+
+def create_and_push_third_file_in_current_branch
+  Dir.chdir @repository do
+    # Create second new file
+    File.open 'file3.rb', 'w+' do |f|
+      f.write "def moo\nputs 'darth'\nend\n"
+    end
+    `git add -A && git commit -m "Third file"`
+  end
+end
+
+def in_repository
+  Dir.chdir @repository do
+    yield
+  end
+end
+
+def not_in_repository
+  Dir.chdir @not_repository do
+    yield
+  end
+end

@@ -28,7 +28,7 @@ end
 def create_and_push_first_file
   Dir.chdir @repository do
     File.open 'file1.rb', 'w+' do |f|
-      f.write "def foo\nputs 'bar'\nend\n"
+      f.write "def foo\n'bar'\nend\n"
     end
     `git add -A`
     `git commit -m "First file"`
@@ -43,7 +43,7 @@ def create_and_push_second_file_in_new_branch
 
     # Create first new file
     File.open 'file2.rb', 'w+' do |f|
-      f.write "def zoo\nputs 'bar'\nend\n"
+      f.write "def zoo\n'bar'\nend\n"
     end
     `git add -A && git commit -m "Second file"`
   end
@@ -53,7 +53,7 @@ def create_and_push_third_file_in_current_branch
   Dir.chdir @repository do
     # Create second new file
     File.open 'file3.rb', 'w+' do |f|
-      f.write "def moo\nputs 'darth'\nend\n"
+      f.write "def moo\n'darth'\nend\n"
     end
     `git add -A && git commit -m "Third file"`
   end

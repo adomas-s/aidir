@@ -57,6 +57,7 @@ Per-method score:
 
 #### Badgers
 [![Code Climate](https://codeclimate.com/github/adomas-s/aidir.png)](https://codeclimate.com/github/adomas-s/aidir)
+[![Coverage Status](https://coveralls.io/repos/adomas-s/aidir/badge.png?branch=master)](https://coveralls.io/r/adomas-s/aidir?branch=master)
 [![Build Status](https://travis-ci.org/adomas-s/aidir.svg?branch=master)](https://travis-ci.org/adomas-s/aidir)
 
 ![Badger](http://upload.wikimedia.org/wikipedia/commons/4/41/Badger%28UO%29.jpg)

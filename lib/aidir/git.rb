@@ -8,11 +8,11 @@ class Git
   end
 
   def is_repository?
-    error = false
     Open3.popen3('git rev-parse') do |_, _, stderr|
       error = stderr.read
       @errors << error unless error.empty?
     end
+    @errors.empty?
   end
 
   def ruby_files

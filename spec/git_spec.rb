@@ -48,14 +48,18 @@ describe Git do
 
   describe 'is_repository?' do
     it 'recognizes repository' do
-      in_repository { @git.is_repository? }
-      @git.errors.should eql []
+      in_repository do
+        @git.is_repository?.should eql true
+        @git.errors.should eql []
+      end
     end
 
     it 'recognizes non-repository' do
-      not_in_repository { @git.is_repository? }
-      @git.errors.size.should eql 1
-      @git.errors.first.should include "fatal: Not a git repository"
+      not_in_repository do
+        @git.is_repository?.should eql false
+        @git.errors.size.should eql 1
+        @git.errors.first.should include "fatal: Not a git repository"
+      end
     end
   end
 

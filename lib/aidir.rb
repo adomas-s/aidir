@@ -8,8 +8,9 @@ class Aidir
 
   def self.start
     @git = Git.new
-    @git.is_repository?
-    puts @git.errors and return if @git.errors.any?
+    if @git.is_repository? and @git.errors.any?
+      puts @git.errors and return
+    end
 
     scoreboard = Scoreboard.new(get_flog_results)
     print scoreboard.results

@@ -75,7 +75,7 @@ describe Git do
         create_and_push_first_file
       end
 
-      it 'should find new files' do
+      it 'finds new files' do
         create_and_push_second_file_in_new_branch
 
         in_repository do
@@ -93,28 +93,20 @@ describe Git do
         end
       end
 
-      it 'should find modified files' do
+      it 'finds modified files' do
+        modify_first_file_in_new_branch
+
         in_repository do
-          `git checkout -q -b modified_file`
-
-          File.open 'file1.rb', 'w+' do |f|
-            f.write "def loo\n'bar'\nend\n"
-          end
-          `git add -A && git commit -m "Modified first file"`
-
           @git.send(:all_changed_files)
           @git.errors.should eql []
           @git.changed_files.should eql %w(file1.rb)
         end
       end
 
-      it 'should find removed files' do
-         in_repository do
-          `git checkout -q -b removed_file`
+      it 'finds removed files' do
+        remove_first_file_in_new_branch
 
-          File.delete 'file1.rb'
-          `git add -A && git commit -m "Removed first file"`
-
+        in_repository do
           @git.send(:all_changed_files)
           @git.errors.should eql []
           @git.changed_files.should eql %w(file1.rb)
@@ -126,7 +118,7 @@ describe Git do
       it 'should catch errors' do
         in_repository do
           File.open 'file1.rb', 'w+' do |f|
-            f.write "def foo\n'bar'\nend\n"
+            f.write first_file_contents
           end
           `git add -A`
           `git commit -m "First file"`
@@ -173,7 +165,7 @@ describe Git do
     it 'returns contents of remotely existing file' do
       in_repository do
         remote = @git.send(:remote_file_contents, 'file1.rb')
-        remote.should eql "def foo\n'bar'\nend\n"
+        remote.should eql first_file_contents
       end
     end
 

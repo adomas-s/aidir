@@ -62,10 +62,49 @@ def delete_directories_and_contents
   FileUtils.rm_rf(@repository_clone)
 end
 
+def first_file_contents
+  <<-eos
+    def foo
+      'bar' unless 'something'
+      if true or true or true
+        'stuff'
+      elsif false
+        'moo'
+      end
+    end
+  eos
+end
+
+def second_file_contents
+  <<-eos
+    def zoo
+      'bar'
+    end
+
+    def moo
+      if true or false
+        true
+      elsif true
+        true
+      elsif false
+        false
+      end
+    end
+  eos
+end
+
+def third_file_contents
+  <<-eos
+    def moo
+      'darth'
+    end
+  eos
+end
+
 def create_and_push_first_file
   in_repository do
     File.open 'file1.rb', 'w+' do |f|
-      f.write "def foo\n'bar'\nend\n"
+      f.write first_file_contents
     end
     `git add -A`
     `git commit -m "First file"`
@@ -80,7 +119,7 @@ def create_and_push_second_file_in_new_branch
 
     # Create first new file
     File.open 'file2.rb', 'w+' do |f|
-      f.write "def zoo\n'bar'\nend\n"
+      f.write second_file_contents
     end
     `git add -A && git commit -m "Second file"`
   end
@@ -90,9 +129,29 @@ def create_and_push_third_file_in_current_branch
   in_repository do
     # Create second new file
     File.open 'file3.rb', 'w+' do |f|
-      f.write "def moo\n'darth'\nend\n"
+      f.write third_file_contents
     end
     `git add -A && git commit -m "Third file"`
+  end
+end
+
+def modify_first_file_in_new_branch
+  in_repository do
+    `git checkout -q -b modified_file`
+
+    File.open 'file1.rb', 'w+' do |f|
+      f.write "def loo\n'simpler'\nend\n"
+    end
+    `git add -A && git commit -m "Modified first file"`
+  end
+end
+
+def remove_first_file_in_new_branch
+  in_repository do
+    `git checkout -q -b removed_file`
+
+    File.delete 'file1.rb'
+    `git add -A && git commit -m "Removed first file"`
   end
 end
 

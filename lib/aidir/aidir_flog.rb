@@ -1,4 +1,6 @@
-class Flog
+require 'flog_cli'
+
+class AidirFlog
 
   def initialize(filename)
     @branch = filename
@@ -31,9 +33,13 @@ class Flog
   end
 
   def flog_file(filename)
-    Open3.popen3("flog -a #{filename}") do |_, stdout, stderr|
-      stdout.read
-    end
+    out = StringIO.new
+    args = ['-a', filename]
+    options = FlogCLI.parse_options(args)
+    flogger = FlogCLI.new(options)
+    flogger.flog(args)
+    flogger.report(out)
+    out.string
   end
 
   def raw_to_hash(data)

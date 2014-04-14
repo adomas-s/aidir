@@ -1,5 +1,5 @@
 require_relative 'aidir/git'
-require_relative 'aidir/flog'
+require_relative 'aidir/aidir_flog'
 require_relative 'aidir/formatter'
 require_relative 'aidir/scoreboard'
 require 'open3'
@@ -26,7 +26,7 @@ class Aidir
     results = {}
 
     @git.ruby_files.each do |file|
-      flog = Flog.new(file)
+      flog = AidirFlog.new(file)
       results[file] = flog.analyze
     end
     @git.clear_cached_files

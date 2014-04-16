@@ -18,8 +18,9 @@ class Aidir
     end
 
     scoreboard = Scoreboard.new(get_flog_results)
-    print scoreboard.results
-    return scoreboard.results
+    results = scoreboard.results
+    print results
+    return results
   end
 
   def get_flog_results

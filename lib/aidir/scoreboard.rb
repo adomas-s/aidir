@@ -10,6 +10,7 @@ class Scoreboard
   end
 
   def results
+    return @output unless @output.empty?
     get_relevant_scores
     if @method_data.empty?
       print_no_deltas_found

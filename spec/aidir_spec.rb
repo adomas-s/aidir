@@ -32,8 +32,10 @@ describe Aidir do
   describe 'get_flog_results' do
     before(:each) do
       create_and_push_first_file
+      @aidir.prepare_git
     end
-    it 'works with new files' do        create_and_push_second_file_in_new_branch
+    it 'works with new files' do
+      create_and_push_second_file_in_new_branch
       in_repository do
         flog_results = @aidir.get_flog_results
         flog_results.keys.should eql %w(file2.rb)

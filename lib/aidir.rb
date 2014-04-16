@@ -7,7 +7,6 @@ require 'open3'
 class Aidir
 
   def initialize
-    start
   end
 
   def start

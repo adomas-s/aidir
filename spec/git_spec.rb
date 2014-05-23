@@ -139,6 +139,12 @@ describe Git do
       @git.send(:changed_files).should eql %w(file1.rb app/file2.rb)
     end
 
+    it 'should filter out files in spec/ and features/' do
+      @git.send(:changed_files=, %w(features/test.rb spec/models/file1.rb app/file2.rb))
+      @git.send(:filter_ruby_files)
+      @git.send(:changed_files).should eql %w(app/file2.rb)
+    end
+
     it 'should return empty array when no ruby files were changed' do
       @git.send(:changed_files=, %w(Gemfile))
       @git.send(:filter_ruby_files)

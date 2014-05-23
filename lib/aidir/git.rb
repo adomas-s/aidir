@@ -40,7 +40,7 @@ class Git
   end
 
   def filter_ruby_files
-    @changed_files.reject! { |filename| filename[-3..-1] != '.rb' }
+    @changed_files.reject! { |filename| filename[-3..-1] != '.rb' or filename[/^(spec|features)\//] }
   end
 
   def cache_files
